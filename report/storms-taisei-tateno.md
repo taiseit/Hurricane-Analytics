@@ -1,6 +1,5 @@
-workout1-taisei-tateno.Rmd
+storms-taisei-tateno.Rmd
 ================
-Taisei Tateno
 
 ``` r
 library(readr)
