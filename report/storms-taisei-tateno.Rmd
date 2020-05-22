@@ -1,0 +1,257 @@
+---
+title: "workout1-taisei-tateno.Rmd"
+author: "Taisei Tateno"
+output: github_document
+---
+
+```{r, message = FALSE, warning = FALSE}
+library(readr)
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+```
+
+
+```{r}
+aspect_ratio <- 2.5
+col_names <- c("serial_num", 
+               "season", 
+               "num", 
+               "basin", 
+               "sub_basin", 
+               "name", 
+               "iso_time", 
+               "nature", 
+               "latitude", 
+               "longitude", 
+               "wind", 
+               "press")
+col_types <- cols(col_character(), 
+                  col_integer(), 
+                  col_character(), 
+                  col_factor(), 
+                  col_character(), 
+                  col_character(), 
+                  col_character(), 
+                  col_character(), 
+                  col_double(), 
+                  col_double(), 
+                  col_double(), 
+                  col_double())
+```
+
+```{r, message = FALSE, warning = FALSE}
+dat <- read_csv("../data/ibtracs-2010-2015.csv", 
+         col_names = col_names, 
+         col_types = col_types,
+         na = c("-999.", "-1.0", "0.0"))
+dat <- dat%>%tail(-2)
+dat <- dat%>%mutate(season_fact = factor(season))
+dat <- dat%>%mutate(date_time = ymd_hms(iso_time))
+dat <- dat%>%mutate(month_num = month(date_time))
+dat <- dat%>%mutate(month_str = month(date_time, label = TRUE))
+dat%>%head(5)
+```
+
+```{r eval = FALSE}
+We begin by providing some general summary statistics for every column of the dat table. 
+This enables us to gain a basic understanding of the types of values we will be working with.
+```
+
+
+```{r}
+dat%>%summary()
+```
+
+<p>We would like to know the frequency of storms for every season between 2010 - 2015. We explore this inquiry in the following code chunk: </p>
+<h4>What is the number of (unique) storms in each year?</h4>
+```{r}
+season_storm_count <- dat%>%
+  group_by(season)%>%
+  summarize(storm_frequency = n_distinct(serial_num))
+season_storm_count
+```
+
+<p>While this is informative, we plot this data in the form of a line plot to improve its readability</p>
+
+```{r}
+ggplot(season_storm_count, aes(x = season, y = storm_frequency)) + geom_line() + ggtitle("Line plot of storm frequencies overtime (2010 - 2015)")
+ggsave("../images/line-plot-of-storm-frequencies-overtime.pdf", height = 10, width = 10 * aspect_ratio)
+ggsave("../images/line-plot-of-storm-frequencies-overtime.png", height = 10, width = 10 * aspect_ratio)
+```
+<p>It is clear that 2013 had an unusually high number of storms in comparison to the other years</p>
+
+<p>Next, we'd like to find the total number of distinct storms from 2010 - 2015. This is accomplished through the following query:</p>
+```{r}
+total_unique_storms <- season_storm_count%>%summarize(total_unique_storms=sum(storm_frequency))
+total_unique_storms
+```
+<p>There are 562 distinct storm entries from 2010 - 2015. This is interesting it isn't very useful. We can get more granular and ask ourselves the following questions:</p>
+
+<h4>What is the total number of storms per hemisphere?</h4>
+<h4>Do storms tend to occur more often in one hemisphere than in the other?</h4>
+```{r}
+northern_storms <- dat%>%
+  group_by(serial_num)%>%
+  summarize(median_latitude=max(latitude))%>%
+  filter(median_latitude > 0)%>%
+  nrow()
+
+southern_storms <- dat%>%
+  group_by(serial_num)%>%
+  summarize(median_latitude=min(latitude))%>%
+  filter(median_latitude < 0)%>%
+  nrow()
+
+northern_storms 
+southern_storms
+``` 
+<p>From 2010 - 2015, the frequenecy of storms in the Northern hemisphere (270) was greater in comparison to the frequency of storms in the Southern hemisphere (62).</p>
+
+<p>We'd like to know whether there exists any storms whose trajectories pass the equator. We use the following code chunk to answer this question:</p>
+```{r}
+equator_storms <- dat%>%
+  group_by(serial_num)%>%
+  summarize(max_latitude = max(latitude), min_latitude = min(latitude))%>%
+  filter((max_latitude > 0) & (min_latitude < 0))
+equator_storms
+```
+<p>It appears that there are no storms whose trajectory passes the equator. We verify the validity of this observation in the following visualization:</p>
+
+<p>We map the trajectories for all storms from seasons between 2010 - 2015. We use a color scale to determine how the wind speed of each storm changes as the trajectory of the storm changes.</p>
+```{r map1, echo FALSE, fig.align='center'}
+knitr::include_graphics(('../images/map-all-storms.png'))
+```
+<p>It is clear that there are no storms whose trajectories pass the equator. We observe that the wind speeds of storms in the Northern Indian and Southern Pacific basins are lower than those of the Eastern Pacific, Northern Atlantic, and the Eastern Pacific basin.</p>
+
+<p>Next we'd like to understand which month of the year has the greatest frequency of storms. We accomplish this with the following query:</p>
+```{r}
+dat%>%
+  group_by(serial_num)%>%
+  summarise(month_str = first(month_str))%>%
+  group_by(month_str)%>%
+  summarize(counts = n())%>%
+  filter(counts == max(counts))
+```
+<p>We find that August possesses the greatest storm frequency from the years 2010 - 2015 with a count of 84. This begs the question, how does storm frequency vary from month to month? We answer the question in the following code chunk:</p>
+
+<h4>Do storms tend to occur uniformly throughout the year (evenly amount of storms per month)? Or are there months where there’s more storm activity?</h4>
+```{r}
+storms_by_month <- dat%>%  
+  group_by(serial_num)%>%
+  summarise(month_str = first(month_str))%>%
+  group_by(month_str)%>%
+  count()
+storms_by_month
+```
+<p>We use the following barplot to improve the readability of our findings from above:</p>
+
+```{r}
+storms_by_month_plt <- ggplot(storms_by_month, aes(month_str, n)) + 
+  geom_bar(stat = "identity") + 
+  xlab('month') + 
+  ylab('frequency') + 
+  ggtitle('storm frequency by month from 2010 - 2015')
+storms_by_month_plt
+ggsave("../images/storm-frequency-by-month.pdf", height = 10, width = 10 * aspect_ratio)
+ggsave("../images/storm-frequency-by-month.png", height = 10, width = 10 * aspect_ratio)
+```
+<p>From the visualization above, it is clear that storm frequency increases throughout Spring and Summer and decreases throughout Fall and Winter. Storms tend to occur most frequently between the months of July and October.</p>
+
+<h4>Is there a particular Basin where storms occur more frequently? Or are there basins without much storm activity?</h4>
+```{r}
+dat%>%
+  group_by(serial_num)%>%
+  summarize(basin=first(basin))%>%
+  group_by(basin)%>%
+  count()%>%
+  arrange(-n)
+```
+
+<p>We're interested in seeing how the wind speed of storms vary for each month of the year for storms that are categorized under basins EP and NA. We create the following visulation to learn more:</p>
+```{r map2, echo FALSE, fig.align='center'}
+knitr::include_graphics(('../images/map-ep-na-storms-by-month.png'))
+```
+<p>The facetted plot reaffirms the observations made in the barplot above. There is an increase in storm frequency throughout Spring and Summer a decrease in frequency throughout Fall and Winter. Storms tend to occur most frequently between the months of July and October. One advantage of the facetted plot relative to the barplot is we can observe changes in windspeed relative to the trajectory of each storm.</p>
+
+<p>Taking a less granular approach to this inquiry, we want to determine how the wind speed of storms vary for every year between 2010 - 2015 for storms that are categorized under basins EP and NA. We create the following visulation to learn more:</p>
+```{r map3, echo FALSE, fig.align='center'}
+knitr::include_graphics(('../images/map-ep-na-storms-by-year.png'))
+```
+<p>Notice the variance in windspeeds for each year. It appears that there is a positive association between the variables.</p>
+
+<h4>What is the typical duration of a storm (e.g. in terms of hours, or days)?</h4>
+<h4>Are there storms with durations that deviate considerably from the typical duration?</h4>
+```{r}
+storm_duration <- dat%>%
+  group_by(serial_num)%>%
+  summarize(max_time = max(iso_time), min_time = min(iso_time))%>%
+  mutate(diff_time = difftime(max_time, min_time))
+storm_duration%>%head(5)
+```
+```{r}
+storm_duration%>%summary()
+```
+<p>The average storm duration is approximately 185 hours. We see that there was a storm whose duration was 642 hours, which deviates considerably from the typical duration.</p>
+
+<p>Next we want to find the 10 storms with the longest duration in hours. We use the following code chunk to examine this more carefully:</p>
+```{r}
+top_storm_duration <- storm_duration%>%
+  mutate(diff_time = as.numeric(diff_time))%>%
+  arrange(desc(diff_time))
+top_storm_duration%>%head(10)
+```
+
+<p>We use a histogram to visualize the distribution of storm durations for years between 2010 - 2015</p>
+```{r, message = FALSE, warning = FALSE}
+ggplot(storm_duration, aes(diff_time)) + 
+  geom_histogram(binwidth = 30) + 
+  ggtitle("histogram of storm durations")
+ggsave("../images/histogram-of-storm durations.pdf", height = 10, width = 10 * aspect_ratio)
+ggsave("../images/histogram-of-storm durations.png", height = 10, width = 10 * aspect_ratio)
+```
+<p>The histogram of storm durations for storms between 2010 - 2015 is skewed to the right.</p>
+
+<h4>What is the top-10 list of storms in terms of high wind speed values?</h4>
+<p>Before addressing this inquiry, we use the summary function to understand the maximum windspeed of each storm</p>
+```{r}
+high_winds <- dat%>%
+  group_by(serial_num)%>%
+  summarize(max_wind = max(wind))
+high_winds%>%summary()
+```
+
+```{r}
+top_high_winds <- high_winds%>%arrange(-max_wind)
+top_high_winds
+```
+<p>We see that 10 storms with the highest windspeeds had windspeeds that ranged from 125 mph to 140 mph</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

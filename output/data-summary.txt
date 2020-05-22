@@ -1,0 +1,24 @@
+  serial_num            season         num                basin       sub_basin             name          
+ Length:19483       Min.   :2010   Length:19483       WP     :5755   Length:19483       Length:19483      
+ Class :character   1st Qu.:2011   Class :character   SI     :4132   Class :character   Class :character  
+ Mode  :character   Median :2013   Mode  :character   EP     :3314   Mode  :character   Mode  :character  
+                    Mean   :2013                      NA     :2838                                        
+                    3rd Qu.:2014                      SP     :2040                                        
+                    Max.   :2015                      NI     :1353                                        
+                    NA's   :2                         (Other):  51                                        
+   iso_time            nature             latitude         longitude            wind           press       
+ Length:19483       Length:19483       Min.   :-61.300   Min.   :-179.90   Min.   :  3.0   Min.   : 885.0  
+ Class :character   Class :character   1st Qu.:-12.800   1st Qu.: -76.10   1st Qu.: 30.0   1st Qu.: 984.0  
+ Mode  :character   Mode  :character   Median : 15.200   Median :  80.80   Median : 40.0   Median : 996.0  
+                                       Mean   :  9.086   Mean   :  36.09   Mean   : 46.7   Mean   : 989.8  
+                                       3rd Qu.: 22.800   3rd Qu.: 129.60   3rd Qu.: 60.0   3rd Qu.:1004.0  
+                                       Max.   : 69.000   Max.   : 180.00   Max.   :140.0   Max.   :1017.0  
+                                       NA's   :1677      NA's   :1677      NA's   :4145    NA's   :2299    
+ season_fact   date_time                     month_num        month_str   
+ 2010:2787   Min.   :2009-11-13 06:00:00   Min.   : 1.000   Aug    :2879  
+ 2011:3255   1st Qu.:2011-08-26 12:00:00   1st Qu.: 4.000   Sep    :2871  
+ 2012:3307   Median :2013-01-14 18:00:00   Median : 8.000   Oct    :2340  
+ 2013:3299   Mean   :2013-01-19 14:00:06   Mean   : 6.902   Jul    :1807  
+ 2014:3537   3rd Qu.:2014-07-28 00:00:00   3rd Qu.: 9.000   Jan    :1650  
+ 2015:3296   Max.   :2015-10-15 00:00:00   Max.   :12.000   (Other):7934  
+ NA's:   2   NA's   :2                     NA's   :2        NA's   :   2  
