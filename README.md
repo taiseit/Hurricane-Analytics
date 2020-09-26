@@ -35,5 +35,3 @@ Storm data was downloaded from the <a href="https://www.ncdc.noaa.gov/ibtracs/in
 Name: Taisei Tateno <br>
 Personal Website: https://taiseit.github.io <br> 
 Email: tjt (at) berkeley (dot) edu <br>
-  
-
