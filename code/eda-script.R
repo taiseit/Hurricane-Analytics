@@ -45,7 +45,7 @@ sink(file = 'desktop/workout1/output/data-summary.txt')
 summary(dat)
 sink()
 
-# 5) Data Visulation
+# 5) Data Visualization
 aspect_ratio <- 2.5
 world <- map_data("world")
 map-all-storms <- ggplot() + 
